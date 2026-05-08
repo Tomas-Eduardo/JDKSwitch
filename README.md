@@ -1,155 +1,120 @@
 # JDK Switcher
 
-JDK Switcher es una aplicación de escritorio para Windows que detecta automáticamente los JDK instalados en el equipo y permite cambiar `JAVA_HOME` con un click.
+JDK Switcher is a small Windows desktop app that automatically detects installed JDKs and lets you switch `JAVA_HOME` with one click.
 
-La app está hecha en Python con `tkinter`, no requiere permisos de administrador y modifica únicamente las variables de entorno del usuario actual.
+It is designed for developers who work with multiple Java versions and want a simple UI instead of manually editing environment variables.
 
-## Características
+## Download
 
-- Detecta instalaciones locales de JDK automáticamente.
-- Permite activar un JDK desde una interfaz gráfica simple.
-- Actualiza `JAVA_HOME` del usuario.
-- Actualiza el `Path` del usuario para usar `%JAVA_HOME%\bin`.
-- No modifica variables de entorno del sistema.
-- No requiere permisos de administrador.
-- Incluye build portable como `.exe` usando PyInstaller.
+Download `JDKSwitcher.exe` from the repository release page and run it.
 
-## Capturas
+No installation is required.
 
-Agrega aquí una captura si quieres mostrar la interfaz en GitHub:
+## Features
 
-```markdown
-![JDK Switcher](docs/screenshot.png)
-```
+- Automatically detects local JDK installations.
+- Switches `JAVA_HOME` from a minimal desktop UI.
+- Updates the current user's `Path` to prioritize `%JAVA_HOME%\bin`.
+- Does not modify system-wide environment variables.
+- Does not require administrator permissions.
+- Works with JDK distributions installed in common Windows locations.
 
-## Uso
+## How To Use
 
-### Opción recomendada: ejecutable
-
-Descarga `JDKSwitcher.exe` desde la sección de Releases del repositorio y ejecútalo.
-
-Después de activar un JDK, abre una terminal nueva y verifica:
+1. Open `JDKSwitcher.exe`.
+2. Select the JDK you want to activate.
+3. Click `Activate JDK`.
+4. Open a new terminal.
+5. Verify the active version:
 
 ```powershell
 java -version
-echo $env:JAVA_HOME
 ```
 
-### Desde código fuente
+## Important Note
 
-Requisitos:
+Environment variable changes only apply to new processes.
 
-- Windows
-- Python 3.11 o superior
+If you already had a terminal, IDE, build tool, or editor open, restart it after switching JDKs.
 
-Ejecutar:
+## What It Changes
 
-```powershell
-python jdk_switcher.py
-```
+JDK Switcher modifies user-level environment variables only:
 
-También puedes usar el lanzador:
+- `JAVA_HOME`: set to the selected JDK path.
+- `Path`: updates the user's `Path` so `%JAVA_HOME%\bin` is prioritized.
 
-```powershell
-.\run_jdk_switcher.bat
-```
+It does not modify machine-level variables.
 
-## Crear el ejecutable
+## Detection
 
-Instala PyInstaller:
-
-```powershell
-python -m pip install pyinstaller
-```
-
-Genera el `.exe`:
-
-```powershell
-python -m PyInstaller --onefile --windowed --name "JDKSwitcher" "jdk_switcher.py"
-```
-
-El ejecutable queda en:
-
-```text
-dist\JDKSwitcher.exe
-```
-
-## Qué modifica
-
-La aplicación modifica variables de entorno del usuario actual:
-
-- `JAVA_HOME`: apunta al JDK seleccionado.
-- `Path`: agrega `%JAVA_HOME%\bin` al inicio del `Path` de usuario y elimina entradas previas de JDK detectadas en el mismo `Path` de usuario.
-
-No modifica el `Path` del sistema ni requiere permisos de administrador.
-
-## Detección automática
-
-Busca JDK válidos en rutas comunes como:
+The app searches for valid JDK installations in common locations such as:
 
 - `C:\Program Files\Java`
 - `C:\Program Files\Eclipse Adoptium`
 - `C:\Program Files\Amazon Corretto`
 - `C:\Program Files\Microsoft`
 - `C:\Program Files\Zulu`
-- `JAVA_HOME` actual
-- entradas existentes del `PATH`
+- the current `JAVA_HOME`
+- existing `PATH` entries
 
-Un directorio se considera JDK válido si contiene:
+A folder is considered a valid JDK if it contains:
 
 - `bin\java.exe`
 - `bin\javac.exe`
 
-## Limitaciones
+## Limitations
 
-- El cambio aplica a terminales, IDEs y procesos abiertos después del switch.
-- Las aplicaciones ya abiertas no reciben el nuevo `JAVA_HOME`; reinícialas si hace falta.
-- Si existe una ruta Java en el `Path` del sistema con mayor prioridad, algunos procesos podrían seguir tomando esa ruta para `java`. Las herramientas que respetan `JAVA_HOME` sí usarán el JDK seleccionado.
+- Existing terminals and IDEs must be restarted after switching.
+- If a system-level Java path has higher priority in some process context, that process may still resolve `java` differently.
+- Tools that respect `JAVA_HOME` will use the selected JDK.
 
-## Qué subir a GitHub
+## Build From Source
 
-Recomendado para el repositorio:
+Requirements:
+
+- Windows
+- Python 3.11 or newer
+- PyInstaller
+
+Run from source:
+
+```powershell
+python jdk_switcher.py
+```
+
+Build the executable:
+
+```powershell
+python -m pip install pyinstaller
+python -m PyInstaller --onefile --windowed --name "JDKSwitcher" "jdk_switcher.py"
+```
+
+The executable will be generated at:
+
+```text
+dist\JDKSwitcher.exe
+```
+
+## Repository Notes
+
+Recommended files to keep in source control:
 
 - `jdk_switcher.py`
 - `run_jdk_switcher.bat`
 - `README.md`
+- `LICENSE`
 - `.gitignore`
 
-No recomendado para commits normales:
+Build outputs should generally not be committed:
 
 - `dist/`
 - `build/`
 - `*.spec`
 - `__pycache__/`
 
-El `.exe` conviene publicarlo como asset de una Release de GitHub, no commitearlo al repositorio. Así el código fuente queda limpio y los usuarios pueden descargar el binario desde Releases.
+If you only want to distribute the app, publish `JDKSwitcher.exe` as a GitHub Release asset.
 
-## Publicar en GitHub
+## License
 
-Inicializa el repo local:
-
-```powershell
-git init
-git add jdk_switcher.py run_jdk_switcher.bat README.md .gitignore
-git commit -m "Add JDK Switcher desktop app"
-```
-
-Crea un repositorio vacío en GitHub y conecta el remoto:
-
-```powershell
-git branch -M main
-git remote add origin https://github.com/TU_USUARIO/JDKSwitch.git
-git push -u origin main
-```
-
-Para publicar el ejecutable:
-
-1. En GitHub, entra al repositorio.
-2. Ve a `Releases`.
-3. Crea una nueva release, por ejemplo `v1.0.0`.
-4. Adjunta `dist\JDKSwitcher.exe` como archivo descargable.
-5. Publica la release.
-
-## Licencia
-
-Define una licencia antes de publicar si quieres que otros puedan usar o modificar el proyecto. Una opción común para proyectos pequeños es MIT.
+This project is licensed under the MIT License. See [LICENSE](LICENSE) for details.
