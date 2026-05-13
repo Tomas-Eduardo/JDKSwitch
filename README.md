@@ -1,119 +1,150 @@
 # JDK Switcher
 
-JDK Switcher is a small Windows desktop app that automatically detects installed JDKs and lets you switch `JAVA_HOME` with one click.
+JDK Switcher is a desktop application that detects installed JDKs and lets you switch `JAVA_HOME` with one click.
 
-It is designed for developers who work with multiple Java versions and want a simple UI instead of manually editing environment variables.
+It supports **Windows** and **macOS (Apple Silicon / Intel)**.
 
 ## Download
 
-Download `JDKSwitcher.exe` from the repository release page and run it.
+### Windows
 
-No installation is required.
+Download `JDKSwitcher.exe` from the [Releases](https://github.com/TU_USUARIO/JDKSwitch/releases) page and run it. No installation required.
+
+### macOS
+
+**Option 1 — Run from source (no build needed):**
+
+```bash
+python3 jdk_switcher.py
+```
+
+Or double-click `JDKSwitcher.command` from Finder:
+
+```bash
+chmod +x JDKSwitcher.command
+```
+
+**Option 2 — Build a native .app bundle:**
+
+Run the helper script on your Mac:
+
+```bash
+chmod +x build_macos.sh
+./build_macos.sh
+```
+
+This generates `dist/JDKSwitcher`. You can wrap it as a proper `.app`:
+
+```bash
+mkdir -p "JDKSwitcher.app/Contents/MacOS"
+cp dist/JDKSwitcher "JDKSwitcher.app/Contents/MacOS/JDKSwitcher"
+```
+
+Requires Python 3 with Tkinter support. The official Python installer from [python.org](https://www.python.org/downloads/) includes Tkinter.
 
 ## Features
 
 - Automatically detects local JDK installations.
 - Switches `JAVA_HOME` from a minimal desktop UI.
-- Updates the current user's `Path` to prioritize `%JAVA_HOME%\bin`.
-- Does not modify system-wide environment variables.
+- Updates the `Path` to prioritize the selected JDK.
 - Does not require administrator permissions.
-- Works with JDK distributions installed in common Windows locations.
+- Dark minimal interface.
 
 ## How To Use
 
-1. Open `JDKSwitcher.exe`.
+1. Open the application.
 2. Select the JDK you want to activate.
-3. Click `Activate JDK`.
+3. Click **Activate JDK**.
 4. Open a new terminal.
 5. Verify the active version:
 
-```powershell
+```bash
 java -version
+echo $JAVA_HOME
 ```
 
-## Important Note
+## Important
 
-Environment variable changes only apply to new processes.
+Environment variable changes only apply to **new** processes. Restart terminals, IDEs, or build tools after switching.
 
-If you already had a terminal, IDE, build tool, or editor open, restart it after switching JDKs.
+## How It Works
 
-## What It Changes
+### Windows
 
-JDK Switcher modifies user-level environment variables only:
+- `JAVA_HOME` is set in user environment variables (registry).
+- User `Path` is updated to include `%JAVA_HOME%\bin` first.
+- Previous JDK entries are removed from the user `Path`.
+- Does not modify system environment variables.
 
-- `JAVA_HOME`: set to the selected JDK path.
-- `Path`: updates the user's `Path` so `%JAVA_HOME%\bin` is prioritized.
+### macOS
 
-It does not modify machine-level variables.
+- A file `~/.jdk_switcher_env.sh` is created with the `JAVA_HOME` and `PATH` exports.
+- Your shell config (`.zshrc`, `.bashrc`, `.bash_profile`, `.zprofile`) is updated to source this file.
+- `launchctl setenv` is called so GUI apps also receive the new `JAVA_HOME`.
+- New terminals will automatically pick up the selected JDK.
 
 ## Detection
 
-The app searches for valid JDK installations in common locations such as:
+The app searches for JDK installations in standard locations:
 
+### Windows
 - `C:\Program Files\Java`
 - `C:\Program Files\Eclipse Adoptium`
 - `C:\Program Files\Amazon Corretto`
 - `C:\Program Files\Microsoft`
 - `C:\Program Files\Zulu`
-- the current `JAVA_HOME`
-- existing `PATH` entries
+- Current `JAVA_HOME` and `Path`
 
-A folder is considered a valid JDK if it contains:
+### macOS
+- `/Library/Java/JavaVirtualMachines/`
+- `~/Library/Java/JavaVirtualMachines/`
+- `/opt/homebrew/Cellar/openjdk/`
+- Current `JAVA_HOME`
 
-- `bin\java.exe`
-- `bin\javac.exe`
-
-## Limitations
-
-- Existing terminals and IDEs must be restarted after switching.
-- If a system-level Java path has higher priority in some process context, that process may still resolve `java` differently.
-- Tools that respect `JAVA_HOME` will use the selected JDK.
+A folder is considered a valid JDK if it contains `bin/java` and `bin/javac`.
 
 ## Build From Source
 
-Requirements:
+### Requirements
 
-- Windows
 - Python 3.11 or newer
-- PyInstaller
+- PyInstaller (for executable build)
 
-Run from source:
+### Run directly
 
-```powershell
-python jdk_switcher.py
+```bash
+python jdk_switcher.py      # Windows
+python3 jdk_switcher.py     # macOS
 ```
 
-Build the executable:
+### Build executable
 
 ```powershell
+# Windows
 python -m pip install pyinstaller
 python -m PyInstaller --onefile --windowed --name "JDKSwitcher" "jdk_switcher.py"
 ```
 
-The executable will be generated at:
-
-```text
-dist\JDKSwitcher.exe
+```bash
+# macOS
+pip3 install pyinstaller
+python3 -m PyInstaller --onefile --windowed --name "JDKSwitcher" "jdk_switcher.py"
 ```
 
-## Repository Notes
+The executable will be generated at `dist/JDKSwitcher.exe` (Windows) or `dist/JDKSwitcher` (macOS).
 
-Recommended files to keep in source control:
+## Repository Structure
 
-- `jdk_switcher.py`
-- `run_jdk_switcher.bat`
-- `README.md`
-- `LICENSE`
-- `.gitignore`
-
-Build outputs should generally not be committed:
-
-- `dist/`
-- `build/`
-- `*.spec`
-- `__pycache__/`
-
-If you only want to distribute the app, publish `JDKSwitcher.exe` as a GitHub Release asset.
+```
+JDKSwitcher/
+├── jdk_switcher.py          # Main application (cross-platform)
+├── JDKSwitcher.command      # macOS launcher (double-click)
+├── run_jdk_switcher.bat     # Windows launcher (double-click)
+├── build_macos.sh           # macOS build helper
+├── README.md
+├── LICENSE
+└── .gitignore
+```
 
 ## License
 
